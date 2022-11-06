@@ -26,16 +26,32 @@ def fit_to_size(node, target):
 	#print(node.x_scale)
 	#print(dir(target.frame))
 
-class TitleScene():
+class TitleScene(scene.Scene):
 	def __init__(self, gm):
 		self.gm = gm
-		self.is_tapped = False
+		self.evt_tapped = asyncio.Event()
+		self.nodes = []
 		
 	def touch_began(self, touched):
-		self.is_tapped = True
+		print('touch_began called.')
+		self.set_tapped()
+		
+	def touch_moved(self, node, touch):
+		print('touch moved')
+		
+	def touch_ended(self, node, touch):
+		print('touch ended.')
+		
+	def update(self):
+		print('update')
 		
 	def get_root(self):
 		return self.gm.get_rootpyscene()
+	
+	def add_child(self, node):
+		root = self.get_root()
+		root.add_child(node)
+		self.nodes.append(node)
 		
 	async def init(self):
 		root = self.get_root()
@@ -52,28 +68,40 @@ class TitleScene():
 		bg.x_scale = sscale
 		bg.y_scale = sscale
 		bg.fill_color = 'green'
-		root.add_child(bg)
+		#bg.touch_began = self.touch_began
+		self.add_child(bg)
 		
 		## Title logo
 		logo = scene.LabelNode()
 		logo.text = 'Pong Solo'
 		logo.position = pnt_center + scene.Point(0, 200)
-		root.add_child(logo)
-		
-		##
-		self.is_tapped = False
+		self.add_child(logo)
+	
+	async def term(self):
+		for node in self.nodes:
+			node.remove_from_parent()
+		self.nodes = []
 		
 	async def show(self):
 		await self.init()
-		await self.wait_tapped()
-		return 10
+		#await self.wait_tapped()
+		#await self.term()
+		
+		return 0
 		
 	async def wait_tapped(self):
+		self.evt_tapped.clear()
+		await self.evt_tapped.wait()
+		
+	def set_tapped(self):
+		self.evt_tapped.set()
 		pass
+
 
 class RootPyScene(scene.Scene):
 	def setup(self):
 		self.background_color = 'blue'
+
 
 class GameManager():
 	def __init__(self):
