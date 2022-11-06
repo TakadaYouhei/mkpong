@@ -39,10 +39,10 @@ class TitleScene():
 		print('touch_began called.')
 		self.set_tapped()
 
-	def touch_moved(self, node, touch):
+	def touch_moved(self, touch):
 		print('touch moved')
 
-	def touch_ended(self, node, touch):
+	def touch_ended(self, touch):
 		print('touch ended.')
 
 	#def update(self):
@@ -58,7 +58,7 @@ class TitleScene():
 
 	async def init(self):
 		root = self.get_root()
-		#root.set_receiver(self)
+		root.set_receiver(self)
 
 		ssize = scene.get_screen_size()
 		sscale = scene.get_screen_scale()
@@ -85,56 +85,59 @@ class TitleScene():
 		for node in self.nodes:
 			node.remove_from_parent()
 		self.nodes = []
+		root = self.get_root()
+		root.set_receiver(None)
 
 	async def show(self):
 		await self.init()
-		#await self.wait_tapped()
-		#await self.term()
+		await self.wait_tapped()
+		await self.term()
+		await asyncio.sleep(5)  # 動作確認用
 
 		return 0
 
 	async def wait_tapped(self):
+		print('wait_tapped start.')
 		self.evt_tapped.clear()
+		print('wait_tapped waiting...')
 		await self.evt_tapped.wait()
+		print('wait_tapped ended.')
 
 	def set_tapped(self):
+		print('set_tapped called.')
 		self.evt_tapped.set()
-		pass
+		print('set_tapped ended.')
 
 
 class RootPyScene(scene.Scene):
-	def __init__(self):
-		self.receiver = None
-	
-	
 	def setup(self):
+		self.receiver = None
 		self.background_color = 'blue'
-		
-		
+
 	def set_receiver(self, receiver):
 		"""touch_began, touch_moved, touch_ended を受け取るオブジェクトを登録する"""
 		self.receiver = receiver
-		
-		
+
+	def update(self):
+		pass
+
 	def touch_began(self, touch):
 		if self.receiver is None:
 			return
-		
+
 		self.receiver.touch_began(touch)
-		
-		
-	def touch_moved(self, node, touch):
+
+	def touch_moved(self, touch):
 		if self.receiver is None:
 			return
-		
-		self.receiver.touch_moved(node, touch)
-		
-	
-	def touch_ended(self, node, touch):
+
+		self.receiver.touch_moved(touch)
+
+	def touch_ended(self, touch):
 		if self.receiver is None:
 			return
-			
-		self.receiver.touch_ended(node, touch)
+
+		self.receiver.touch_ended(touch)
 
 
 class GameManager():
