@@ -29,7 +29,7 @@ def fit_to_size(node, target):
 	#print(dir(target.frame))
 
 
-class TitleScene(scene.Scene):
+class TitleScene():
 	def __init__(self, gm):
 		self.gm = gm
 		self.evt_tapped = asyncio.Event()
@@ -45,8 +45,8 @@ class TitleScene(scene.Scene):
 	def touch_ended(self, node, touch):
 		print('touch ended.')
 
-	def update(self):
-		print('update')
+	#def update(self):
+	#	pass
 
 	def get_root(self):
 		return self.gm.get_rootpyscene()
@@ -58,6 +58,7 @@ class TitleScene(scene.Scene):
 
 	async def init(self):
 		root = self.get_root()
+		#root.set_receiver(self)
 
 		ssize = scene.get_screen_size()
 		sscale = scene.get_screen_scale()
@@ -102,8 +103,38 @@ class TitleScene(scene.Scene):
 
 
 class RootPyScene(scene.Scene):
+	def __init__(self):
+		self.receiver = None
+	
+	
 	def setup(self):
 		self.background_color = 'blue'
+		
+		
+	def set_receiver(self, receiver):
+		"""touch_began, touch_moved, touch_ended を受け取るオブジェクトを登録する"""
+		self.receiver = receiver
+		
+		
+	def touch_began(self, touch):
+		if self.receiver is None:
+			return
+		
+		self.receiver.touch_began(touch)
+		
+		
+	def touch_moved(self, node, touch):
+		if self.receiver is None:
+			return
+		
+		self.receiver.touch_moved(node, touch)
+		
+	
+	def touch_ended(self, node, touch):
+		if self.receiver is None:
+			return
+			
+		self.receiver.touch_ended(node, touch)
 
 
 class GameManager():
