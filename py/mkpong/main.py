@@ -46,6 +46,10 @@ class TitleScene():
 	def touch_ended(self, touch):
 		print('touch ended.')
 
+	def close(self):
+		print('close called.')
+		self.set_tapped()
+
 	#def update(self):
 	#	pass
 
@@ -141,6 +145,7 @@ class RootPyScene(scene.Scene):
 				elif 'touch_ended' == eventinfo.cmd:
 					self.receiver.touch_ended(eventinfo.option)
 			if 'request_end':
+				self.receiver.close()
 				break
 
 	def update(self):
@@ -154,6 +159,9 @@ class RootPyScene(scene.Scene):
 
 	def touch_ended(self, touch):
 		self.event_queue.put(EventInfo('touch_ended', touch))
+
+	def stop(self):
+		self.event_queue.put(EventInfo('request_end', None))
 
 
 class GameManager():
