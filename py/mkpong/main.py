@@ -1,4 +1,5 @@
 import asyncio
+import queue
 import scene
 import ui
 
@@ -35,7 +36,7 @@ class TitleScene():
 		self.evt_tapped = asyncio.Event()
 		self.nodes = []
 
-	def touch_began(self, touched):
+	def touch_began(self, touch):
 		print('touch_began called.')
 		self.set_tapped()
 
@@ -109,7 +110,17 @@ class TitleScene():
 		print('set_tapped ended.')
 
 
+class EventInfo():
+	def __init__(self, cmd, option):
+		self.cmd = cmd
+		self.option = option
+
+
 class RootPyScene(scene.Scene):
+	def __init__(self):
+		super().__init__()
+		self.event_queue = queue.LifoQueue()
+
 	def setup(self):
 		self.receiver = None
 		self.background_color = 'blue'
@@ -118,31 +129,38 @@ class RootPyScene(scene.Scene):
 		"""touch_began, touch_moved, touch_ended を受け取るオブジェクトを登録する"""
 		self.receiver = receiver
 
+	async def main_loop(self):
+		'''handle event queue'''
+		while True:
+			eventinfo = self.event_queue.get()
+			if self.receiver is not None:
+				if 'touch_began' == eventinfo.cmd:
+					self.receiver.touch_began(eventinfo.option)
+				elif 'touch_moved' == eventinfo.cmd:
+					self.receiver.touch_moved(eventinfo.option)
+				elif 'touch_ended' == eventinfo.cmd:
+					self.receiver.touch_ended(eventinfo.option)
+			if 'request_end':
+				break
+
 	def update(self):
 		pass
 
 	def touch_began(self, touch):
-		if self.receiver is None:
-			return
-
-		self.receiver.touch_began(touch)
+		self.event_queue.put(EventInfo('touch_began', touch))
 
 	def touch_moved(self, touch):
-		if self.receiver is None:
-			return
-
-		self.receiver.touch_moved(touch)
+		self.event_queue.put(EventInfo('touch_moved', touch))
 
 	def touch_ended(self, touch):
-		if self.receiver is None:
-			return
-
-		self.receiver.touch_ended(touch)
+		self.event_queue.put(EventInfo('touch_ended', touch))
 
 
 class GameManager():
 	def __init__(self):
 		self.rootpyscene = None
+		self.loop = None
+		self.rootpyscene_task = None
 
 	def get_rootpyscene(self):
 		return self.rootpyscene
@@ -150,6 +168,13 @@ class GameManager():
 	async def init(self):
 		self.rootpyscene = RootPyScene()
 		scene.run(self.rootpyscene)
+
+		self.rootpyscene_task = self.loop.create_task(self.rootpyscene.main_loop())
+
+	async def term(self):
+		await self.rootpyscene_task
+
+		self.rootpyscene_task = None
 
 	async def show(self, scene):
 		ret = await scene.show()
@@ -166,13 +191,16 @@ class GameManager():
 		ret = await self.show(title)
 		print(f'ret is {ret}')
 
+		# 後始末
+		await self.term()
+
 		print('main_loop finish.')
 
 	def start_main_loop(self):
 		#loop = asyncio.get_event_loop()
-		loop = asyncio.get_event_loop_policy().new_event_loop()
-		loop.run_until_complete(self.main_loop())
-		loop.close()
+		self.loop = asyncio.get_event_loop_policy().new_event_loop()
+		self.loop.run_until_complete(self.main_loop())
+		self.loop.close()
 
 
 def main():
