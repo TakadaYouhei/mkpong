@@ -114,17 +114,10 @@ class TitleScene():
 		print('set_tapped ended.')
 
 
-class EventInfo():
-	def __init__(self, cmd, option):
-		self.cmd = cmd
-		self.option = option
-
-
 class RootPyScene(scene.Scene):
 	def __init__(self, loop):
 		super().__init__()
 		self.loop = loop
-		self.event_queue = queue.LifoQueue()
 
 	def setup(self):
 		self.receiver = None
@@ -133,41 +126,21 @@ class RootPyScene(scene.Scene):
 	def set_receiver(self, receiver):
 		"""touch_began, touch_moved, touch_ended を受け取るオブジェクトを登録する"""
 		self.receiver = receiver
-
-	async def main_loop(self):
-		'''handle event queue'''
-		while True:
-			eventinfo = self.event_queue.get()
-			if self.receiver is not None:
-				if 'touch_began' == eventinfo.cmd:
-					self.receiver.touch_began(eventinfo.option)
-				elif 'touch_moved' == eventinfo.cmd:
-					self.receiver.touch_moved(eventinfo.option)
-				elif 'touch_ended' == eventinfo.cmd:
-					self.receiver.touch_ended(eventinfo.option)
-			if 'request_end':
-				self.receiver.close()
-				break
+		
 
 	def update(self):
 		pass
 
 	def touch_began(self, touch):
-		#self.event_queue.put(EventInfo('touch_began', touch))
 		self.loop.call_soon_threadsafe(self.receiver.touch_began, touch)
 
 	def touch_moved(self, touch):
-		#self.event_queue.put(EventInfo('touch_moved', touch))
 		self.loop.call_soon_threadsafe(self.receiver.touch_moved, touch)
 
 	def touch_ended(self, touch):
-		#self.event_queue.put(EventInfo('touch_ended', touch))
 		self.loop.call_soon_threadsafe(self.receiver.touch_ended, touch)
 
 	def stop(self):
-		print('stop called.')
-		#self.event_queue.put(EventInfo('request_end', None))
-		self.loop.call_soon_threadsafe(self.receiver.close)
 
 
 class GameManager():
@@ -183,11 +156,8 @@ class GameManager():
 		self.rootpyscene = RootPyScene(self.loop)
 		scene.run(self.rootpyscene)
 
-		#self.rootpyscene_task = self.loop.create_task(self.rootpyscene.main_loop())
 
 	async def term(self):
-		#await self.rootpyscene_task
-
 		self.rootpyscene_task = None
 
 	async def show(self, scene):
