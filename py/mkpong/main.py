@@ -121,8 +121,9 @@ class EventInfo():
 
 
 class RootPyScene(scene.Scene):
-	def __init__(self):
+	def __init__(self, loop):
 		super().__init__()
+		self.loop = loop
 		self.event_queue = queue.LifoQueue()
 
 	def setup(self):
@@ -152,16 +153,21 @@ class RootPyScene(scene.Scene):
 		pass
 
 	def touch_began(self, touch):
-		self.event_queue.put(EventInfo('touch_began', touch))
+		#self.event_queue.put(EventInfo('touch_began', touch))
+		self.loop.call_soon_threadsafe(self.receiver.touch_began, touch)
 
 	def touch_moved(self, touch):
-		self.event_queue.put(EventInfo('touch_moved', touch))
+		#self.event_queue.put(EventInfo('touch_moved', touch))
+		self.loop.call_soon_threadsafe(self.receiver.touch_moved, touch)
 
 	def touch_ended(self, touch):
-		self.event_queue.put(EventInfo('touch_ended', touch))
+		#self.event_queue.put(EventInfo('touch_ended', touch))
+		self.loop.call_soon_threadsafe(self.receiver.touch_ended, touch)
 
 	def stop(self):
-		self.event_queue.put(EventInfo('request_end', None))
+		print('stop called.')
+		#self.event_queue.put(EventInfo('request_end', None))
+		self.loop.call_soon_threadsafe(self.receiver.close)
 
 
 class GameManager():
@@ -174,13 +180,13 @@ class GameManager():
 		return self.rootpyscene
 
 	async def init(self):
-		self.rootpyscene = RootPyScene()
+		self.rootpyscene = RootPyScene(self.loop)
 		scene.run(self.rootpyscene)
 
-		self.rootpyscene_task = self.loop.create_task(self.rootpyscene.main_loop())
+		#self.rootpyscene_task = self.loop.create_task(self.rootpyscene.main_loop())
 
 	async def term(self):
-		await self.rootpyscene_task
+		#await self.rootpyscene_task
 
 		self.rootpyscene_task = None
 
