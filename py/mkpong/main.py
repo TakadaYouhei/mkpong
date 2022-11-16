@@ -126,21 +126,25 @@ class RootPyScene(scene.Scene):
 	def set_receiver(self, receiver):
 		"""touch_began, touch_moved, touch_ended を受け取るオブジェクトを登録する"""
 		self.receiver = receiver
-		
 
 	def update(self):
 		pass
 
+	def call_receiver_func(self, func, *args):
+		if self.receiver is not None:
+			self.loop.call_soon_threadsafe(getattr(self.receiver, func), *args)
+
 	def touch_began(self, touch):
-		self.loop.call_soon_threadsafe(self.receiver.touch_began, touch)
+		self.call_receiver_func('touch_began', touch)
 
 	def touch_moved(self, touch):
-		self.loop.call_soon_threadsafe(self.receiver.touch_moved, touch)
+		self.call_receiver_func('touch_moved', touch)
 
 	def touch_ended(self, touch):
-		self.loop.call_soon_threadsafe(self.receiver.touch_ended, touch)
+		self.call_receiver_func('touch_ended', touch)
 
 	def stop(self):
+		self.call_receiver_func('close')
 
 
 class GameManager():
@@ -155,7 +159,6 @@ class GameManager():
 	async def init(self):
 		self.rootpyscene = RootPyScene(self.loop)
 		scene.run(self.rootpyscene)
-
 
 	async def term(self):
 		self.rootpyscene_task = None
