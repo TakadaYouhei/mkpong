@@ -30,6 +30,66 @@ def fit_to_size(node, target):
 	#print(dir(target.frame))
 
 
+class GameScene():
+	def __init__(self, gm):
+		self.gm = gm
+		self.evt_closed = asyncio.Event()
+		self.nodes = []
+		
+	def touch_began(self, touch):
+		self.set_closed()
+		
+	async def wait_closed(self):
+		await self.evt_closed.wait()
+		
+	def set_closed(self):
+		self.evt_closed.set()
+		
+	def get_root(self):
+		return self.gm.get_rootpyscene()
+	
+	def add_child(self, node):
+		root = self.get_root()
+		root.add_child(node)
+		self.nodes.append(node)
+			
+	async def init(self):
+		root = self.get_root()
+		root.set_receiver(self)
+		
+		ssize = scene.get_screen_size()
+		sscale = scene.get_screen_scale()
+		pnt_center = scene.Point(ssize.x / 2, ssize.y / 2)
+
+		## Background
+		bg = scene.ShapeNode()
+		bg.path = ui.Path.rect(0, 0, ssize.w, ssize.h)
+		bg.x_scale = sscale
+		bg.y_scale = sscale
+		bg.fill_color = 'pink'
+		self.add_child(bg)
+		
+		## 何か文字
+		logo = scene.LabelNode()
+		logo.text = 'Game scene'
+		logo.position = pnt_center + scene.Point(0, 200)
+		self.add_child(logo)
+		
+	async def term(self):
+		for node in self.nodes:
+			node.remove_from_parent()
+		self.nodes = []
+		root = self.get_root()
+		root.set_receiver(None)
+		
+	async def show(self):
+		await self.init()
+		await self.wait_closed()
+		await self.term()
+
+		return 0
+
+
 class TitleScene():
 	def __init__(self, gm):
 		self.gm = gm
@@ -99,7 +159,7 @@ class TitleScene():
 		await self.term()
 		await asyncio.sleep(5)  # 動作確認用
 
-		return 0
+		return 1
 
 	async def wait_tapped(self):
 		print('wait_tapped start.')
@@ -172,11 +232,19 @@ class GameManager():
 
 		# 初期化
 		await self.init()
+		
+		while True:
 
-		# タイトル
-		title = TitleScene(self)
-		ret = await self.show(title)
-		print(f'ret is {ret}')
+			# タイトル
+			title = TitleScene(self)
+			ret = await self.show(title)
+			if ret == 0:
+				break
+			
+			# ゲームシーン
+			game = GameScene(self)
+			await self.show(game)
+		
 
 		# 後始末
 		await self.term()
