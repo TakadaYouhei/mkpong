@@ -191,7 +191,10 @@ class RootPyScene(scene.Scene):
 
 	def call_receiver_func(self, func, *args):
 		if self.receiver is not None:
-			self.loop.call_soon_threadsafe(getattr(self.receiver, func), *args)
+			try:
+				self.loop.call_soon_threadsafe(getattr(self.receiver, func), *args)
+			except AttributeError:
+				pass
 
 	def touch_began(self, touch):
 		self.call_receiver_func('touch_began', touch)
