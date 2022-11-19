@@ -157,7 +157,6 @@ class TitleScene():
 		await self.init()
 		await self.wait_tapped()
 		await self.term()
-		await asyncio.sleep(5)  # 動作確認用
 
 		return 1
 
