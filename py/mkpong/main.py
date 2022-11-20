@@ -52,7 +52,16 @@ class GameScene():
 		root = self.get_root()
 		root.add_child(node)
 		self.nodes.append(node)
-			
+	
+	def remove_child(self, node):
+		root = self.get_root()
+		if node in self.nodes:
+			print('remove')
+			node.remove_from_parent()
+			self.nodes.remove(node)
+		else:
+			print('cannot remove. it is not found.')
+	
 	async def init(self):
 		root = self.get_root()
 		root.set_receiver(self)
@@ -72,7 +81,7 @@ class GameScene():
 		## 何か文字
 		logo = scene.LabelNode()
 		logo.text = 'Game scene'
-		logo.position = pnt_center + scene.Point(0, 200)
+		logo.position = pnt_center + scene.Point(0, 500)
 		self.add_child(logo)
 		
 	async def term(self):
@@ -84,10 +93,43 @@ class GameScene():
 		
 	async def show(self):
 		await self.init()
+		
+		# Ready
+		await self.ready_init()
+		await self.ready_main()
+		await self.ready_term()
+		
+		# Game
+		await self.game_init()
+		await self.game_main()
+		await self.game_term()
+		
 		await self.wait_closed()
 		await self.term()
 
 		return 0
+		
+	async def ready_init(self):
+		p = scene.Node()
+		
+		ssize = scene.get_screen_size()
+		sscale = scene.get_screen_scale()
+		pnt_center = scene.Point(ssize.x / 2, ssize.y / 2)
+		
+		label = scene.LabelNode()
+		label.text = 'Ready'
+		label.position = pnt_center
+		p.add_child(label)
+		
+		self.ready_node = p
+		self.add_child(self.ready_node)
+		
+	async def ready_term(self):
+		self.remove_child(self.ready_node)
+		self.ready_node = None
+		
+	async def ready_main(self):
+		await asyncio.sleep(2)
 
 
 class TitleScene():
