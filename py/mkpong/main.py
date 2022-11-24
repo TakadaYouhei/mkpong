@@ -39,10 +39,17 @@ class GameScene():
 	def touch_began(self, touch):
 		self.set_closed()
 		
+	def close(self):
+		self.set_closed()
+		
 	async def wait_closed(self):
+		print('GameScene.wait_closed called.')
+		if self.evt_closed.is_set():
+			return
 		await self.evt_closed.wait()
 		
 	def set_closed(self):
+		print('GameScene.set_closed called.')
 		self.evt_closed.set()
 		
 	def get_root(self):
@@ -130,6 +137,30 @@ class GameScene():
 		
 	async def ready_main(self):
 		await asyncio.sleep(2)
+		
+	async def game_init(self):
+		p = scene.Node()
+		
+		ssize = scene.get_screen_size()
+		
+		# 左側の縦線
+		line_lv = scene.ShapeNode()
+		line_lv.path = ui.Path.rect(0,0, 400, 400)
+		line_lv.path.line_width = 2.0
+		line_lv.path.move_to(0,0)
+		line_lv.path.line_to(100,100)
+		line_lv.fill_color = 'green'
+		p.add_child(line_lv)
+		
+		self.game_node = p
+		self.add_child(p)
+		
+	async def game_term(self):
+		self.remove_child(self.game_node)
+		self.game_node = None
+	
+	async def game_main(self):
+		await asyncio.sleep(10)
 
 
 class TitleScene():
