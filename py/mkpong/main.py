@@ -145,10 +145,15 @@ class GameScene():
 
 		# 左側の縦線
 		line_lv = scene.ShapeNode()
-		line_lv.path = ui.Path.rect(0, 0, 400, 400)
+		line_lv.path = ui.Path.rect(400, -800, 400, 400)
 		line_lv.path.line_width = 2.0
 		line_lv.path.move_to(0, 0)
 		line_lv.path.line_to(100, 100)
+		line_lv.path.line_to(100, -100)
+		line_lv.path.line_to(-100, -100)
+		line_lv.path.line_to(-100, 100)
+		line_lv.path.line_to(100, 100)
+		line_lv.path.stroke()
 		line_lv.fill_color = 'green'
 		p.add_child(line_lv)
 
