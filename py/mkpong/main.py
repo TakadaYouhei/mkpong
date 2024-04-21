@@ -121,6 +121,8 @@ class GameScene():
 
 		ssize = scene.get_screen_size()
 		sscale = scene.get_screen_scale()
+		print(ssize)
+		print(sscale)
 		pnt_center = scene.Point(ssize.x / 2, ssize.y / 2)
 
 		label = scene.LabelNode()
@@ -136,7 +138,7 @@ class GameScene():
 		self.ready_node = None
 
 	async def ready_main(self):
-		await asyncio.sleep(2)
+		pass #await asyncio.sleep(2)
 
 	async def game_init(self):
 		p = scene.Node()
@@ -145,7 +147,7 @@ class GameScene():
 
 		# 左側の縦線
 		line_lv = scene.ShapeNode()
-		line_lv.path = ui.Path.rect(400, -800, 400, 400)
+		line_lv.path = ui.Path.rect(20, -1600, 20, 800)
 		line_lv.path.line_width = 2.0
 		line_lv.path.move_to(0, 0)
 		line_lv.path.line_to(100, 100)
